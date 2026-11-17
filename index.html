@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaDub AI — Free Video Translation & Dubbing Studio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Kantumruy Pro', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        studio: {
+                            950: '#07090e',
+                            900: '#0d111a',
+                            850: '#131824',
+                            800: '#1a2130',
+                            700: '#263044',
+                            600: '#35435e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Studio Scrollbars & Glass Effects */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d111a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #263044;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5;
+        }
+
+        body {
+            background-color: #07090e;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(19, 24, 36, 0.85);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .segment-active {
+            border-color: #6366f1 !important;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.16) 0%, rgba(19, 24, 36, 0.9) 100%) !important;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Custom Range Sliders */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: #1e293b;
+            height: 6px;
+            border-radius: 999px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -5px;
+            background-color: #6366f1;
+            height: 16px;
+            width: 16px;
+            border-radius: 999px;
+            border: 2px solid #e0e7ff;
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background-color: #818cf8;
+        }
+
+        @keyframes pulseWave {
+            0%, 100% { transform: scaleY(0.35); }
+            50% { transform: scaleY(1); }
+        }
+        .wave-bar {
+            animation: pulseWave 0.9s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- TOP STUDIO NAVBAR -->
+    <header class="sticky top-0 z-30 glass-panel border-b border-slate-800/80 px-4 lg:px-6 py-3">
+        <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                    <i class="fa-solid fa-waveform-lines text-white text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">MetaDub <span class="text-indigo-400">Studio</span></h1>
+                        <span class="text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Free AI Dubbing</span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">Real-Time Video Translation, Timecode Sync & Multi-Language TTS Studio</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions & Demo Loader -->
+            <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                <button id="btnLoadDemo" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-xs sm:text-sm shadow-lg shadow-emerald-900/30 flex items-center gap-2 transition active:scale-95">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Load Demo Video & Sample Script</span>
+                </button>
+
+                <label for="mediaFileInput" class="cursor-pointer px-3.5 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-200 border border-slate-700/80 text-xs sm:text-sm font-medium flex items-center gap-2 transition">
+                    <i class="fa-solid fa-film text-indigo-400"></i>
+                    <span>Upload Video/Audio</span>
+                    <input id="mediaFileInput" type="file" accept="video/*,audio/*" class="hidden">
+                </label>
+
+                <label for="srtFileInput" class="cursor-pointer px-3.5 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-200 border border-slate-700/80 text-xs sm:text-sm font-medium flex items-center gap-2 transition">
+                    <i class="fa-solid fa-closed-captioning text-amber-400"></i>
+                    <span>Import .SRT/.VTT/.JSON</span>
+                    <input id="srtFileInput" type="file" accept=".srt,.vtt,.json,.txt" class="hidden">
+                </label>
+
+                <button id="btnOpenTranscriptModal" class="px-3.5 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-200 border border-slate-700/80 text-xs sm:text-sm font-medium flex items-center gap-2 transition">
+                    <i class="fa-solid fa-bolt text-purple-400"></i>
+                    <span class="hidden md:inline">AI Script Generator</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE GRID -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- LEFT COLUMN: MEDIA PLAYER, SYNC TIMELINE & VOICE/AUDIO MIXER (5 Cols on Desktop) -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+
+            <!-- VIDEO / AUDIO STAGE CARD -->
+            <div id="dropZoneContainer" class="glass-panel rounded-2xl overflow-hidden shadow-xl flex flex-col border border-slate-800/90 relative">
+                <!-- Top Player Status Bar -->
+                <div class="px-4 py-2.5 bg-studio-900/90 border-b border-slate-800/80 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2 truncate">
+                        <span id="mediaStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span id="mediaFileName" class="font-medium text-slate-300 truncate">AI Documentary Demo (Built-in HD Canvas Stream)</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <!--Speaking Status Indicator-->
+                        <div id="ttsSpeakingBadge" class="hidden items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-mono text-[11px]">
+                            <span class="flex items-end gap-0.5 h-3">
+                                <span class="w-0.5 h-3 bg-indigo-400 wave-bar" style="animation-delay:0s"></span>
+                                <span class="w-0.5 h-3 bg-indigo-400 wave-bar" style="animation-delay:0.2s"></span>
+                                <span class="w-0.5 h-3 bg-indigo-400 wave-bar" style="animation-delay:0.4s"></span>
+                            </span>
+                            <span id="ttsSpeakingModeText">DUBBING</span>
+                        </div>
+                        <span id="playerTimeReadout" class="font-mono text-slate-400 bg-studio-950 px-2 py-0.5 rounded border border-slate-800">00:00.0 / 00:32.0</span>
+                    </div>
+                </div>
+
+                <!-- Video Display Area -->
+                <div class="relative bg-black aspect-video w-full flex items-center justify-center overflow-hidden select-none group">
+                    <!-- HTML5 Video Element (For Uploaded Videos) -->
+                    <video id="mainVideo" class="w-full h-full object-contain hidden" playsinline crossorigin="anonymous"></video>
+
+                    <!-- Built-in Interactive Documentary Canvas Player (Default Demo & Audio Visualizer) -->
+                    <canvas id="demoStageCanvas" class="w-full h-full block"></canvas>
+
+                    <!-- Drag and Drop Overlay -->
+                    <div id="dragOverlay" class="hidden absolute inset-0 bg-indigo-950/90 backdrop-blur-md z-20 flex flex-col items-center justify-center border-2 border-dashed border-indigo-400 m-3 rounded-xl">
+                        <i class="fa-solid fa-cloud-arrow-up text-4xl text-indigo-300 mb-2 animate-bounce"></i>
+                        <p class="text-base font-semibold text-white">Drop Video, Audio, or .SRT Subtitle File Here</p>
+                        <p class="text-xs text-indigo-200 mt-1">Supports .MP4, .WEBM, .MP3, .WAV, .SRT, .VTT</p>
+                    </div>
+
+                    <!-- Live Subtitle / Caption Overlay -->
+                    <div id="subtitleOverlayContainer" class="absolute bottom-5 inset-x-4 flex flex-col items-center justify-end pointer-events-none z-10 transition-all">
+                        <div id="captionBox" class="max-w-[92%] px-4 py-2 rounded-xl bg-black/80 backdrop-blur-md border border-white/10 text-center shadow-2xl transition-all duration-150">
+                            <p id="captionOriginalText" class="text-xs text-slate-300/90 mb-0.5 font-normal tracking-wide"></p>
+                            <p id="captionTranslatedText" class="text-sm sm:text-base md:text-lg font-semibold text-amber-300 leading-snug drop-shadow"></p>
+                        </div>
+                    </div>
+
+                    <!-- Center Play/Pause Floating Button on Hover -->
+                    <button id="btnCenterPlay" class="w-14 h-14 rounded-full bg-indigo-600/85 hover:bg-indigo-500 text-white flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 focus:opacity-100">
+                        <i id="centerPlayIcon" class="fa-solid fa-play text-xl ml-0.5"></i>
+                    </button>
+                </div>
+
+                <!-- Interactive Multi-Segment Timeline & Scrubber -->
+                <div class="p-3.5 bg-studio-900 border-t border-slate-800/90 flex flex-col gap-2.5">
+                    <!-- Timeline Track with Segment Blocks -->
+                    <div class="relative w-full h-8 bg-studio-950 rounded-lg border border-slate-800 overflow-hidden cursor-pointer select-none" id="timelineTrack" title="Click or drag to seek across dubbing segments">
+                        <!-- Rendered Segment Blocks Container -->
+                        <div id="timelineSegmentsLayer" class="absolute inset-0"></div>
+                        <!-- Playhead Line -->
+                        <div id="timelinePlayhead" class="absolute top-0 bottom-0 w-0.5 bg-rose-500 z-10 pointer-events-none" style="left: 0%;">
+                            <div class="w-2.5 h-2.5 rounded-full bg-rose-500 -ml-[4px] -mt-0.5 shadow"></div>
+                        </div>
+                    </div>
+
+                    <!-- Transport Controls & Master Dubbing Toggle -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                        <div class="flex items-center gap-2">
+                            <button id="btnPlayPause" class="w-9 h-9 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow transition active:scale-95" title="Play / Pause (Space)">
+                                <i id="playPauseIcon" class="fa-solid fa-play text-sm"></i>
+                            </button>
+                            <button id="btnStopReset" class="w-9 h-9 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-300 border border-slate-700/80 flex items-center justify-center transition" title="Stop & Return to Start">
+                                <i class="fa-solid fa-rotate-left text-xs"></i>
+                            </button>
+                            <button id="btnToggleDualSubs" class="px-2.5 py-1.5 rounded-lg bg-studio-800 hover:bg-studio-700 text-slate-300 border border-slate-700/80 text-xs font-medium flex items-center gap-1.5 transition" title="Toggle Bilingual Subtitles">
+                                <i class="fa-solid fa-closed-captioning text-indigo-400"></i>
+                                <span id="subModeLabel">Dual Subs</span>
+                            </button>
+                        </div>
+
+                        <!-- Master AI Dubbing Sync Toggle -->
+                        <label class="flex items-center gap-2.5 cursor-pointer bg-studio-950/90 px-3 py-1.5 rounded-xl border border-indigo-500/40 hover:border-indigo-400 transition">
+                            <input type="checkbox" id="chkEnableDubbing" checked class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all relative peer-checked:bg-indigo-600"></div>
+                            <span class="text-xs font-semibold text-indigo-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-microphone-lines text-indigo-400"></i>
+                                Play with AI Dubbing
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VOICE & AUDIO MIXER STUDIO PANEL -->
+            <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800/90 flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                            <i class="fa-solid fa-sliders text-sm"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-white">Voice Synthesis & Audio Ducking Mixer</h2>
+                            <p class="text-[11px] text-slate-400">Configure TTS voice engine, pitch, speed, and background audio ducking</p>
+                        </div>
+                    </div>
+                    <button id="btnTestVoice" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-volume-high"></i>
+                        <span>Test Voice</span>
+                    </button>
+                </div>
+
+                <!-- TTS Engine Mode Tabs -->
+                <div class="grid grid-cols-2 gap-2 p-1 bg-studio-950 rounded-xl border border-slate-800">
+                    <button id="tabEngineBrowser" class="py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-indigo-600 text-white shadow transition">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Browser Web Speech (Instant)</span>
+                    </button>
+                    <button id="tabEngineGemini" class="py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 text-slate-400 hover:text-white transition">
+                        <i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
+                        <span>Gemini Neural TTS (Studio HD)</span>
+                    </button>
+                </div>
+
+                <!-- Browser TTS Voice Selector -->
+                <div id="browserVoicePanel" class="flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between text-xs">
+                        <label for="voiceSelect" class="font-medium text-slate-300">System / Browser TTS Voice</label>
+                        <span id="voiceCountBadge" class="text-[11px] text-indigo-400 font-mono">Loading voices...</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="voiceSelect" class="w-full rounded-xl bg-studio-900 border border-slate-700/90 px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="">Default System Voice</option>
+                        </select>
+                        <button id="btnRefreshVoices" class="px-3 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 border border-slate-700 text-slate-300 text-xs" title="Reload System Voices">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </button>
+                    </div>
+                    <p id="voiceFallbackNotice" class="text-[11px] text-slate-400 leading-relaxed">
+                        Automatically prioritizes voices matching your target language. Tip: Switch to <strong class="text-indigo-300">Gemini Neural TTS</strong> above if your browser lacks a local voice for Khmer, Thai, or Asian languages.
+                    </p>
+                </div>
+
+                <!-- Gemini Neural TTS Voice Selector (Hidden by default until tab switched) -->
+                <div id="geminiVoicePanel" class="hidden flex-col gap-2.5 bg-indigo-950/20 border border-indigo-500/30 rounded-xl p-3">
+                    <div class="flex items-center justify-between">
+                        <label for="geminiVoiceSelect" class="text-xs font-semibold text-indigo-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-microchip text-purple-400"></i>
+                            <span>Gemini 2.5 Flash Neural Voice</span>
+                        </label>
+                        <span id="neuralCacheBadge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">0 / 0 Cached</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select id="geminiVoiceSelect" class="w-full rounded-xl bg-studio-900 border border-slate-700 px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="Kore">Kore — Firm, Studio Narrator</option>
+                            <option value="Puck">Puck — Upbeat, Dynamic & Energetic</option>
+                            <option value="Zephyr">Zephyr — Bright, Clear Documentary</option>
+                            <option value="Charon">Charon — Deep, Informative & Calm</option>
+                            <option value="Fenrir">Fenrir — Expressive Storyteller</option>
+                            <option value="Aoede">Aoede — Warm, Natural & Breezy</option>
+                        </select>
+                        <button id="btnSynthesizeAllNeural" class="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow">
+                            <i class="fa-solid fa-cloud-bolt"></i>
+                            <span>Pre-Render All Segments</span>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-slate-400">
+                        Generates natural multi-lingual studio audio via Gemini TTS API and caches WAV audio per segment for frame-accurate playback.
+                    </p>
+                </div>
+
+                <!-- Sliders Grid: Speed, Pitch, Dub Volume, Original Audio Ducking -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                    <!-- Speech Rate / Speed -->
+                    <div class="bg-studio-900/90 p-3 rounded-xl border border-slate-800/80 flex flex-col gap-1.5">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-300 font-medium"><i class="fa-solid fa-gauge-high text-indigo-400 mr-1"></i> Voice Speed</span>
+                            <span id="valRate" class="font-mono text-indigo-300 font-semibold">1.00x</span>
+                        </div>
+                        <input id="sliderRate" type="range" min="0.5" max="2.0" step="0.05" value="1.0">
+                        <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                            <span>0.5x</span>
+                            <span>1.0x</span>
+                            <span>2.0x</span>
+                        </div>
+                    </div>
+
+                    <!-- Voice Pitch -->
+                    <div class="bg-studio-900/90 p-3 rounded-xl border border-slate-800/80 flex flex-col gap-1.5">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-300 font-medium"><i class="fa-solid fa-music text-purple-400 mr-1"></i> Voice Pitch</span>
+                            <span id="valPitch" class="font-mono text-purple-300 font-semibold">1.00</span>
+                        </div>
+                        <input id="sliderPitch" type="range" min="0.5" max="1.5" step="0.05" value="1.0">
+                        <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                            <span>Low (0.5)</span>
+                            <span>Normal</span>
+                            <span>High (1.5)</span>
+                        </div>
+                    </div>
+
+                    <!-- Dubbed Voice Volume -->
+                    <div class="bg-studio-900/90 p-3 rounded-xl border border-slate-800/80 flex flex-col gap-1.5">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-300 font-medium"><i class="fa-solid fa-volume-high text-emerald-400 mr-1"></i> Dub Voice Volume</span>
+                            <span id="valDubVol" class="font-mono text-emerald-300 font-semibold">100%</span>
+                        </div>
+                        <input id="sliderDubVol" type="range" min="0" max="100" step="5" value="100">
+                    </div>
+
+                    <!-- Original Video Volume (Background Ducking) -->
+                    <div class="bg-studio-900/90 p-3 rounded-xl border border-slate-800/80 flex flex-col gap-1.5">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-300 font-medium" title="Lowers original video audio while AI dubbing speaks"><i class="fa-solid fa-compress text-amber-400 mr-1"></i> Original Audio Ducking</span>
+                            <span id="valDuckVol" class="font-mono text-amber-300 font-semibold">15%</span>
+                        </div>
+                        <input id="sliderDuckVol" type="range" min="0" max="100" step="5" value="15">
+                    </div>
+                </div>
+
+                <!-- Smart Timing & Auto-Scroll Checkboxes -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80 text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                        <input id="chkAutoFitDuration" type="checkbox" checked class="rounded bg-studio-900 border-slate-700 text-indigo-600 focus:ring-indigo-500">
+                        <span><strong>Auto-Fit Duration:</strong> Dynamically speed up long lines to fit timecodes</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                        <input id="chkAutoScroll" type="checkbox" checked class="rounded bg-studio-900 border-slate-700 text-indigo-600 focus:ring-indigo-500">
+                        <span>Auto-Scroll Active Line</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN: AI TRANSLATION ENGINE & INTERACTIVE SEGMENT EDITOR (7 Cols on Desktop) -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+
+            <!-- AI TRANSLATION & LANGUAGE BAR -->
+            <div class="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800/90 flex flex-col gap-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <!-- Language Selectors -->
+                    <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
+                        <div class="flex-1 min-w-[130px]">
+                            <label class="block text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-1">Source Language</label>
+                            <select id="sourceLangSelect" class="w-full rounded-xl bg-studio-900 border border-slate-700/90 px-3 py-2 text-xs sm:text-sm text-white font-medium focus:outline-none focus:border-indigo-500">
+                                <option value="Auto-Detect">Auto-Detect Language</option>
+                                <option value="English" selected>English (EN)</option>
+                                <option value="Khmer">Khmer / ភាសាខ្មែរ (KM)</option>
+                                <option value="Chinese">Chinese / 中文 (ZH)</option>
+                                <option value="Thai">Thai / ภาษาไทย (TH)</option>
+                                <option value="Japanese">Japanese / 日本語 (JA)</option>
+                                <option value="Korean">Korean / 한국어 (KO)</option>
+                                <option value="Vietnamese">Vietnamese / Tiếng Việt (VI)</option>
+                                <option value="Spanish">Spanish / Español (ES)</option>
+                                <option value="French">French / Français (FR)</option>
+                                <option value="German">German / Deutsch (DE)</option>
+                                <option value="Hindi">Hindi / हिन्दी (HI)</option>
+                            </select>
+                        </div>
+
+                        <button id="btnSwapLangs" class="mt-4 w-8 h-9 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-300 border border-slate-700 flex items-center justify-center transition" title="Swap Languages">
+                            <i class="fa-solid fa-right-left text-xs"></i>
+                        </button>
+
+                        <div class="flex-1 min-w-[145px]">
+                            <label class="block text-[10px] font-mono uppercase tracking-wider text-indigo-400 mb-1">Target Dubbing Language</label>
+                            <select id="targetLangSelect" class="w-full rounded-xl bg-studio-900 border border-indigo-500/60 px-3 py-2 text-xs sm:text-sm text-white font-semibold focus:outline-none focus:border-indigo-400">
+                                <option value="Khmer" data-bcp="km-KH" selected>🇰🇭 Khmer / ភាសាខ្មែរ (km-KH)</option>
+                                <option value="English" data-bcp="en-US">🇺🇸 English (en-US)</option>
+                                <option value="Chinese (Simplified)" data-bcp="zh-CN">🇨🇳 Chinese / 中文 (zh-CN)</option>
+                                <option value="Thai" data-bcp="th-TH">🇹🇭 Thai / ภาษาไทย (th-TH)</option>
+                                <option value="Japanese" data-bcp="ja-JP">🇯🇵 Japanese / 日本語 (ja-JP)</option>
+                                <option value="Korean" data-bcp="ko-KR">🇰🇷 Korean / 한국어 (ko-KR)</option>
+                                <option value="Vietnamese" data-bcp="vi-VN">🇻🇳 Vietnamese / Tiếng Việt (vi-VN)</option>
+                                <option value="Spanish" data-bcp="es-ES">🇪🇸 Spanish / Español (es-ES)</option>
+                                <option value="French" data-bcp="fr-FR">🇫🇷 French / Français (fr-FR)</option>
+                                <option value="German" data-bcp="de-DE">🇩🇪 German / Deutsch (de-DE)</option>
+                                <option value="Hindi" data-bcp="hi-IN">🇮🇳 Hindi / हिन्दी (hi-IN)</option>
+                                <option value="Indonesian" data-bcp="id-ID">🇮🇩 Indonesian (id-ID)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Gemini AI Translate & Dubbing Optimizer Button -->
+                    <div class="flex items-center gap-2 mt-2 sm:mt-4 w-full sm:w-auto">
+                        <button id="btnAiTranslateAll" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 transition active:scale-95">
+                            <i id="translateSpinnerIcon" class="fa-solid fa-language text-base"></i>
+                            <span id="translateBtnLabel">AI Translate & Optimize for Dubbing</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dubbing Pacing Style & Quick Tools Row -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800/80 text-xs">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-slate-400 font-medium">Adaptation Style:</span>
+                        <select id="dubStyleSelect" class="rounded-lg bg-studio-900 border border-slate-700 px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="Isochronous Lip-Sync & Natural Spoken Pacing">Natural Spoken & Duration-Matched (Recommended)</option>
+                            <option value="Concise & Punchy for Fast Narration">Concise & Short (Prevent Rushed TTS)</option>
+                            <option value="Formal Documentary & Broadcast Tone">Formal Documentary / News Broadcast</option>
+                            <option value="Casual Creator / YouTube Vlog Style">Casual YouTube / Creator Dub</option>
+                        </select>
+                    </div>
+
+                    <!-- Timecode Offset & Add Segment Controls -->
+                    <div class="flex items-center gap-1.5">
+                        <button id="btnShiftMinus" class="px-2 py-1 rounded-lg bg-studio-800 hover:bg-studio-700 text-slate-300 border border-slate-700 font-mono text-[11px]" title="Shift all timestamps -0.5s">-0.5s</button>
+                        <button id="btnShiftPlus" class="px-2 py-1 rounded-lg bg-studio-800 hover:bg-studio-700 text-slate-300 border border-slate-700 font-mono text-[11px]" title="Shift all timestamps +0.5s">+0.5s</button>
+                        <button id="btnAddSegmentTop" class="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Add Line</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INTERACTIVE TIMESTAMPED SEGMENT EDITOR CARD -->
+            <div class="glass-panel rounded-2xl border border-slate-800/90 flex-1 flex flex-col overflow-hidden min-h-[460px]">
+                <!-- Editor Header & Search -->
+                <div class="px-4 py-3 bg-studio-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-indigo-400"></i>
+                            <span>Synchronized Dubbing Script</span>
+                        </h3>
+                        <span id="segmentCountBadge" class="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">0 segments</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass text-slate-500 text-xs absolute left-2.5 top-2.5"></i>
+                            <input id="searchSegmentsInput" type="text" placeholder="Filter script lines..." class="pl-7 pr-3 py-1 rounded-lg bg-studio-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 w-40 sm:w-52">
+                        </div>
+                        <button id="btnCopyTranslatedScript" class="px-2.5 py-1 rounded-lg bg-studio-800 hover:bg-studio-700 text-slate-300 border border-slate-700 text-xs flex items-center gap-1" title="Copy All Translated Text">
+                            <i class="fa-regular fa-copy"></i>
+                            <span class="hidden sm:inline">Copy</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scrollable Segments Container -->
+                <div id="segmentsListContainer" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 max-h-[540px]">
+                    <!-- Dynamically populated by JS -->
+                </div>
+
+                <!-- Bottom Export & GitHub Pages Ready Bar -->
+                <div class="px-4 py-3 bg-studio-900 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-xs text-slate-400">
+                        <i class="fa-solid fa-download text-emerald-400"></i>
+                        <span class="font-medium text-slate-300">Export Dubbing & Subtitles:</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="btnExportSRT" class="px-3 py-1.5 rounded-xl bg-studio-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-file-lines"></i>
+                            <span>Translated .SRT</span>
+                        </button>
+                        <button id="btnExportDualSRT" class="px-3 py-1.5 rounded-xl bg-studio-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-language"></i>
+                            <span>Bilingual .SRT</span>
+                        </button>
+                        <button id="btnExportVTT" class="px-3 py-1.5 rounded-xl bg-studio-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-code"></i>
+                            <span>WebVTT (.VTT)</span>
+                        </button>
+                        <button id="btnExportJSON" class="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 text-xs font-medium flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Save Project .JSON</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- AI AUTO-GENERATE SCRIPT / RAW TRANSCRIPT SPLITTER MODAL -->
+    <div id="transcriptModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl max-w-2xl w-full border border-slate-700 shadow-2xl overflow-hidden flex flex-col">
+            <div class="px-5 py-4 bg-studio-900 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">AI Script Generator & Raw Transcript Auto-Splitter</h3>
+                        <p class="text-xs text-slate-400">Generate a timed bilingual script from a topic OR paste raw text to auto-split into timecodes</p>
+                    </div>
+                </div>
+                <button id="btnCloseTranscriptModal" class="text-slate-400 hover:text-white p-1.5">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4 overflow-y-auto max-h-[75vh]">
+                <!-- Option 1: AI Generate Timed Script from Topic -->
+                <div class="bg-studio-900/90 p-4 rounded-xl border border-indigo-500/30 space-y-3">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-indigo-300">
+                        <i class="fa-solid fa-robot mr-1"></i> Option 1: AI Generate Complete Timed Script from Topic
+                    </label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input id="aiTopicInput" type="text" placeholder="e.g. A 30-second documentary about Angkor Wat and ancient engineering..." class="flex-1 rounded-xl bg-studio-950 border border-slate-700 px-3.5 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <button id="btnRunAiTopicScript" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shrink-0">
+                            <i class="fa-solid fa-sparkles"></i>
+                            <span>Generate with Gemini</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Option 2: Paste Raw Transcript to Auto-Timecode -->
+                <div class="bg-studio-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                            <i class="fa-solid fa-align-left mr-1"></i> Option 2: Paste Raw Transcript / Paragraph
+                        </label>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="text-slate-400">Target Total Duration (sec):</span>
+                            <input id="splitTotalDurationInput" type="number" value="32" min="5" max="3600" class="w-16 rounded-lg bg-studio-950 border border-slate-700 px-2 py-1 text-center font-mono text-xs text-white">
+                        </div>
+                    </div>
+                    <textarea id="rawTranscriptTextarea" rows="5" placeholder="Paste any multi-sentence transcript or article here. We will automatically split it into natural spoken segments and distribute timestamps proportionally..." class="w-full rounded-xl bg-studio-950 border border-slate-700 p-3 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500"></textarea>
+                    <div class="flex justify-end gap-2">
+                        <button id="btnSplitRawTranscript" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold flex items-center gap-2">
+                            <i class="fa-solid fa-scissors"></i>
+                            <span>Auto-Split into Timed Segments</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- APPLICATION SCRIPT -->
+    <script>
+        /********************************************************************
+         * 1. STATE & DEMO PRESETS
+         ********************************************************************/
+        const apiKey = ""; // Canvas injects Gemini API key automatically in runtime
+
+        // Default Bilingual Demo Script (English -> Khmer / Multi-language ready)
+        const DEFAULT_DEMO_SEGMENTS = [
+            {
+                id: "seg-1",
+                start: 0.5,
+                end: 5.5,
+                original: "Welcome to MetaDub Studio, the open and free AI video translation platform.",
+                translated: "សូមស្វាគមន៍មកកាន់ MetaDub Studio ដែលជាកម្មវិធីបកប្រែ និងបញ្ចូលសំឡេងវីដេអូដោយឥតគិតថ្លៃ។"
+            },
+            {
+                id: "seg-2",
+                start: 6.0,
+                end: 11.5,
+                original: "Artificial intelligence can now translate spoken dialogue while preserving natural timing.",
+                translated: "បច្ចេកវិទ្យា AI ឥឡូវនេះអាចបកប្រែការសន្ទនា ដោយរក្សាចังหวะពេលវេលានិយាយបានយ៉ាងធម្មជាតិ។"
+            },
+            {
+                id: "seg-3",
+                start: 12.0,
+                end: 18.0,
+                original: "Simply upload your video or subtitle file, choose your target language, and press play.",
+                translated: "គ្រាន់តែបញ្ចូលវីដេអូ ឬឯកសារ Subtitle របស់អ្នក ជ្រើសរើសភាសាគោលដៅ រួចចុចប៊ូតុង Play។"
+            },
+            {
+                id: "seg-4",
+                start: 18.5,
+                end: 24.5,
+                original: "Our smart audio mixer automatically ducks the original background sound when speaking.",
+                translated: "ប្រព័ន្ធលាយសំឡេងឆ្លាតវៃរបស់យើង នឹងបន្ថយសំឡេងដើមដោយស្វ័យប្រវត្តិនៅពេលកំពុងបញ្ចូលសំឡេង។"
+            },
+            {
+                id: "seg-5",
+                start: 25.0,
+                end: 31.0,
+                original: "Edit any line in real time and export your finished subtitles in SRT or VTT format.",
+                translated: "អ្នកអាចកែសម្រួលអត្ថបទបានភ្លាមៗ និងទាញយកឯកសារ Subtitle ជាទម្រង់ SRT ឬ VTT បានយ៉ាងងាយស្រួល។"
+            }
+        ];
+
+        const state = {
+            segments: JSON.parse(JSON.stringify(DEFAULT_DEMO_SEGMENTS)),
+            isDemoMode: true,          // true = uses built-in procedural documentary canvas + ambient audio
+            isPlaying: false,
+            currentTime: 0,
+            duration: 32.0,
+            activeSegmentId: null,
+            lastSpokenSegmentId: null,
+            enableDubbing: true,
+            dualSubtitles: true,
+            ttsEngine: 'browser',      // 'browser' | 'gemini'
+            availableVoices: [],
+            selectedVoiceURI: '',
+            geminiVoice: 'Kore',
+            neuralAudioCache: {},      // key: `${segId}_${text}_${voice}` -> AudioUrl (WAV blob URL)
+            voiceRate: 1.0,
+            voicePitch: 1.0,
+            dubVolume: 1.0,
+            duckVolume: 0.15,          // Original video volume when dubbing is active
+            normalOriginalVolume: 0.8,
+            autoFitDuration: true,
+            autoScroll: true,
+            searchQuery: ''
+        };
+
+        // Language map for BCP-47 matching
+        const LANGUAGE_BCP_MAP = {
+            'Khmer': 'km-KH',
+            'English': 'en-US',
+            'Chinese (Simplified)': 'zh-CN',
+            'Chinese': 'zh-CN',
+            'Thai': 'th-TH',
+            'Japanese': 'ja-JP',
+            'Korean': 'ko-KR',
+            'Vietnamese': 'vi-VN',
+            'Spanish': 'es-ES',
+            'French': 'fr-FR',
+            'German': 'de-DE',
+            'Hindi': 'hi-IN',
+            'Indonesian': 'id-ID'
+        };
+
+        // DOM Elements Reference
+        const mainVideo = document.getElementById('mainVideo');
+        const demoCanvas = document.getElementById('demoStageCanvas');
+        const ctx = demoCanvas.getContext('2d');
+        const timelineTrack = document.getElementById('timelineTrack');
+        const timelineSegmentsLayer = document.getElementById('timelineSegmentsLayer');
+        const timelinePlayhead = document.getElementById('timelinePlayhead');
+        const playerTimeReadout = document.getElementById('playerTimeReadout');
+        const captionOriginalText = document.getElementById('captionOriginalText');
+        const captionTranslatedText = document.getElementById('captionTranslatedText');
+        const captionBox = document.getElementById('captionBox');
+        const segmentsListContainer = document.getElementById('segmentsListContainer');
+        const ttsSpeakingBadge = document.getElementById('ttsSpeakingBadge');
+        const ttsSpeakingModeText = document.getElementById('ttsSpeakingModeText');
+
+        // Active Audio Player for Gemini Neural TTS
+        let activeNeuralAudio = null;
+
+        // Web Audio API synthesizer for Demo ambient background soundtrack (so ducking is genuinely audible in demo mode!)
+        let demoAudioCtx = null;
+        let demoMasterGain = null;
+        let demoOsc1 = null;
+        let demoOsc2 = null;
+
+        /********************************************************************
+         * 2. TOAST NOTIFICATION HELPER (No alert/confirm!)
+         ********************************************************************/
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const colors = {
+                info: 'bg-studio-850 border-indigo-500/50 text-slate-100',
+                success: 'bg-emerald-950/90 border-emerald-500/50 text-emerald-100',
+                warn: 'bg-amber-950/90 border-amber-500/50 text-amber-100',
+                error: 'bg-rose-950/90 border-rose-500/50 text-rose-100'
+            };
+            const icons = {
+                info: 'fa-circle-info text-indigo-400',
+                success: 'fa-circle-check text-emerald-400',
+                warn: 'fa-triangle-exclamation text-amber-400',
+                error: 'fa-circle-xmark text-rose-400'
+            };
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md text-xs sm:text-sm font-medium transition-all duration-300 ${colors[type] || colors.info}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icons[type] || icons.info} text-base shrink-0"></i>
+                <span class="flex-1 leading-snug">${message}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(8px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3600);
+        }
+
+        /********************************************************************
+         * 3. TIME FORMATTING & SRT/VTT PARSERS
+         ********************************************************************/
+        function formatTime(sec) {
+            if (!isFinite(sec) || sec < 0) sec = 0;
+            const mins = Math.floor(sec / 60);
+            const secs = (sec % 60).toFixed(1);
+            return `${String(mins).padStart(2, '0')}:${ secs < 10 ? '0' + secs : secs }`;
+        }
+
+        function formatSrtTimestamp(sec) {
+            if (!isFinite(sec) || sec < 0) sec = 0;
+            const hrs = Math.floor(sec / 3600);
+            const mins = Math.floor((sec % 3600) / 60);
+            const secs = Math.floor(sec % 60);
+            const ms = Math.round((sec - Math.floor(sec)) * 1000);
+            return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
+        }
+
+        function formatVttTimestamp(sec) {
+            return formatSrtTimestamp(sec).replace(',', '.');
+        }
+
+        function parseTimecodeToSeconds(tcString) {
+            if (!tcString) return 0;
+            const clean = tcString.trim().replace(',', '.');
+            const parts = clean.split(':');
+            if (parts.length === 3) {
+                return parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]);
+            } else if (parts.length === 2) {
+                return parseFloat(parts[0]) * 60 + parseFloat(parts[1]);
+            }
+            return parseFloat(clean) || 0;
+        }
+
+        function parseSrtOrVtt(rawContent) {
+            const normalized = rawContent.replace(/\r\n/g, '\n').replace(/^WEBVTT.*\n+/i, '').trim();
+            const blocks = normalized.split(/\n\s*\n/);
+            const parsed = [];
+
+            blocks.forEach((block, idx) => {
+                const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+                if (lines.length < 2) return;
+
+                // Find line with "-->"
+                let timeLineIdx = lines.findIndex(l => l.includes('-->'));
+                if (timeLineIdx === -1) return;
+
+                const timeParts = lines[timeLineIdx].split('-->');
+                const start = parseTimecodeToSeconds(timeParts[0]);
+                const end = parseTimecodeToSeconds(timeParts[1].split(' ')[0]);
+                const textLines = lines.slice(timeLineIdx + 1).join(' ');
+
+                if (textLines) {
+                    parsed.push({
+                        id: `seg-${Date.now()}-${idx}`,
+                        start: Number(start.toFixed(2)),
+                        end: Number(Math.max(start + 1, end).toFixed(2)),
+                        original: textLines,
+                        translated: textLines
+                    });
+                }
+            });
+            return parsed;
+        }
+
+        /********************************************************************
+         * 4. BUILT-IN DEMO STAGE CANVAS & AMBIENT TRACK (For 100% Reliability)
+         ********************************************************************/
+        function startDemoAmbientAudio() {
+            try {
+                if (!demoAudioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    demoAudioCtx = new AudioContext();
+                    demoMasterGain = demoAudioCtx.createGain();
+                    demoMasterGain.gain.value = 0.08 * state.normalOriginalVolume;
+                    demoMasterGain.connect(demoAudioCtx.destination);
+
+                    // Warm ambient documentary pad chord
+                    demoOsc1 = demoAudioCtx.createOscillator();
+                    demoOsc2 = demoAudioCtx.createOscillator();
+                    demoOsc1.type = 'sine';
+                    demoOsc2.type = 'triangle';
+                    demoOsc1.frequency.value = 110; // A2
+                    demoOsc2.frequency.value = 164.81; // E3
+
+                    const filter = demoAudioCtx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 260;
+
+                    demoOsc1.connect(filter);
+                    demoOsc2.connect(filter);
+                    filter.connect(demoMasterGain);
+
+                    demoOsc1.start();
+                    demoOsc2.start();
+                }
+                if (demoAudioCtx.state === 'suspended') {
+                    demoAudioCtx.resume();
+                }
+            } catch (e) {
+                // Ignore if browser blocks audio context
+            }
+        }
+
+        function stopDemoAmbientAudio() {
+            if (demoAudioCtx && demoAudioCtx.state === 'running') {
+                demoAudioCtx.suspend();
+            }
+        }
+
+        function updateOriginalMediaVolume(isDubCurrentlySpeaking) {
+            const targetVol = (state.enableDubbing && isDubCurrentlySpeaking)
+                ? state.duckVolume
+                : state.normalOriginalVolume;
+
+            if (!state.isDemoMode && mainVideo) {
+                mainVideo.volume = Math.max(0, Math.min(1, targetVol));
+            }
+            if (state.isDemoMode && demoMasterGain && demoAudioCtx) {
+                demoMasterGain.gain.setTargetAtTime(0.12 * targetVol, demoAudioCtx.currentTime, 0.1);
+            }
+        }
+
+        function resizeDemoCanvas() {
+            const rect = demoCanvas.parentElement.getBoundingClientRect();
+            demoCanvas.width = Math.max(640, rect.width);
+            demoCanvas.height = Math.max(360, rect.height);
+        }
+
+        function renderDemoStageFrame() {
+            if (!state.isDemoMode) return;
+            const w = demoCanvas.width;
+            const h = demoCanvas.height;
+            const t = state.currentTime;
+
+            // Futuristic Documentary Studio Background
+            const grad = ctx.createLinearGradient(0, 0, w, h);
+            grad.addColorStop(0, '#070b19');
+            grad.addColorStop(0.5, '#111833');
+            grad.addColorStop(1, '#091e26');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            // Subtle Animated Grid
+            ctx.strokeStyle = 'rgba(99, 102, 241, 0.12)';
+            ctx.lineWidth = 1;
+            const gridSize = 42;
+            const offset = (t * 18) % gridSize;
+            for (let x = -offset; x < w; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            for (let y = 0; y < h; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+
+            // Glowing Center AI Globe / Audio-Reactive Waveform Ring
+            const cx = w / 2;
+            const cy = h * 0.43;
+            const baseRadius = Math.min(w, h) * 0.17;
+            const isSpeaking = Boolean(state.activeSegmentId && state.isPlaying && state.enableDubbing);
+
+            for (let ring = 0; ring < 3; ring++) {
+                ctx.beginPath();
+                const r = baseRadius + ring * 18 + (isSpeaking ? Math.sin(t * 14 + ring) * 8 : Math.sin(t * 2 + ring) * 3);
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.strokeStyle = isSpeaking
+                    ? `rgba(129, 140, 248, ${0.45 - ring * 0.12})`
+                    : `rgba(56, 189, 248, ${0.25 - ring * 0.07})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Dynamic Frequency Bars inside center
+            const barCount = 24;
+            const totalBarW = baseRadius * 1.4;
+            const barW = (totalBarW / barCount) * 0.65;
+            const startX = cx - totalBarW / 2;
+
+            for (let i = 0; i < barCount; i++) {
+                const wave = isSpeaking
+                    ? Math.abs(Math.sin(t * 12 + i * 0.55) * Math.cos(t * 7 - i * 0.3)) * (baseRadius * 0.85) + 6
+                    : Math.abs(Math.sin(t * 3 + i * 0.4)) * (baseRadius * 0.25) + 4;
+                const bx = startX + i * (totalBarW / barCount);
+                const by = cy - wave / 2;
+
+                const barGrad = ctx.createLinearGradient(0, by, 0, by + wave);
+                barGrad.addColorStop(0, isSpeaking ? '#818cf8' : '#38bdf8');
+                barGrad.addColorStop(1, isSpeaking ? '#34d399' : '#6366f1');
+                ctx.fillStyle = barGrad;
+                ctx.beginPath();
+                ctx.roundRect(bx, by, barW, wave, 4);
+                ctx.fill();
+            }
+
+            // Top Left Scene Badge
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+            ctx.beginPath();
+            ctx.roundRect(18, 18, 225, 32, 8);
+            ctx.fill();
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '600 11px "JetBrains Mono", monospace';
+            const segIndex = state.segments.findIndex(s => s.id === state.activeSegmentId);
+            const sceneText = segIndex !== -1 ? `SCENE 0${segIndex + 1} • SYNC ACTIVE` : `STANDBY • ${formatTime(t)}`;
+            ctx.fillText(sceneText, 30, 38);
+        }
+
+        /********************************************************************
+         * 5. WEB SPEECH API & GEMINI 2.5 FLASH TTS SYNTHESIS ENGINE
+         ********************************************************************/
+        function loadBrowserVoices() {
+            if (!('speechSynthesis' in window)) {
+                document.getElementById('voiceCountBadge').textContent = 'Web Speech Unavailable';
+                return;
+            }
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices || voices.length === 0) return;
+
+            state.availableVoices = voices;
+            populateVoiceDropdown();
+        }
+
+        function populateVoiceDropdown() {
+            const voiceSelect = document.getElementById('voiceSelect');
+            const targetLang = document.getElementById('targetLangSelect').value;
+            const targetBcp = LANGUAGE_BCP_MAP[targetLang] || 'en-US';
+            const langPrefix = targetBcp.split('-')[0].toLowerCase();
+
+            voiceSelect.innerHTML = '';
+
+            // Sort voices so target language voices appear at the very top
+            const sortedVoices = [...state.availableVoices].sort((a, b) => {
+                const aMatch = a.lang.toLowerCase().startsWith(langPrefix) ? 1 : 0;
+                const bMatch = b.lang.toLowerCase().startsWith(langPrefix) ? 1 : 0;
+                return bMatch - aMatch;
+            });
+
+            let matchedCount = 0;
+            sortedVoices.forEach(v => {
+                const isMatch = v.lang.toLowerCase().startsWith(langPrefix);
+                if (isMatch) matchedCount++;
+                const opt = document.createElement('option');
+                opt.value = v.voiceURI;
+                opt.textContent = `${isMatch ? '★ ' : ''}${v.name} (${v.lang})`;
+                voiceSelect.appendChild(opt);
+            });
+
+            document.getElementById('voiceCountBadge').textContent = matchedCount > 0
+                ? `${matchedCount} ${targetLang} voice(s) ready`
+                : `${sortedVoices.length} system voices (Fallback active)`;
+
+            if (sortedVoices.length > 0) {
+                state.selectedVoiceURI = sortedVoices[0].voiceURI;
+                voiceSelect.value = state.selectedVoiceURI;
+            }
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = loadBrowserVoices;
+            setTimeout(loadBrowserVoices, 150);
+        }
+
+        function stopAllActiveSpeech() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            if (activeNeuralAudio) {
+                activeNeuralAudio.pause();
+                activeNeuralAudio = null;
+            }
+            ttsSpeakingBadge.classList.add('hidden');
+            ttsSpeakingBadge.classList.remove('flex');
+            updateOriginalMediaVolume(false);
+        }
+
+        // Convert Base64 PCM16 from Gemini TTS API to playable WAV Blob
+        function pcm16Base64ToWavUrl(base64Pcm, sampleRate = 24000) {
+            const binaryStr = atob(base64Pcm);
+            const len = binaryStr.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryStr.charCodeAt(i);
+            }
+            const wavHeader = new ArrayBuffer(44);
+            const view = new DataView(wavHeader);
+            const writeString = (offset, str) => {
+                for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+            };
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + bytes.byteLength, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true); // PCM chunk size
+            view.setUint16(20, 1, true);  // PCM format
+            view.setUint16(22, 1, true);  // Mono
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, bytes.byteLength, true);
+
+            const blob = new Blob([wavHeader, bytes], { type: 'audio/wav' });
+            return URL.createObjectURL(blob);
+        }
+
+        async function fetchWithBackoff(url, options, retries = 3) {
+            let delay = 1000;
+            for (let attempt = 0; attempt <= retries; attempt++) {
+                try {
+                    const res = await fetch(url, options);
+                    if (res.ok) return await res.json();
+                    if (attempt === retries) throw new Error(`API HTTP ${res.status}`);
+                } catch (err) {
+                    if (attempt === retries) throw err;
+                }
+                await new Promise(r => setTimeout(r, delay));
+                delay *= 2;
+            }
+        }
+
+        async function synthesizeGeminiNeuralSegment(segment) {
+            const textToSpeak = (segment.translated || segment.original || '').trim();
+            if (!textToSpeak) return null;
+
+            const cacheKey = `${segment.id}_${textToSpeak}_${state.geminiVoice}`;
+            if (state.neuralAudioCache[cacheKey]) {
+                return state.neuralAudioCache[cacheKey];
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{
+                    parts: [{ text: `Read this dubbing line naturally and clearly: ${textToSpeak}` }]
+                }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: state.geminiVoice }
+                        }
+                    }
+                }
+            };
+
+            const result = await fetchWithBackoff(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const part = result?.candidates?.[0]?.content?.parts?.[0];
+            const audioData = part?.inlineData?.data;
+            const mimeType = part?.inlineData?.mimeType || 'audio/L16;rate=24000';
+
+            if (!audioData) throw new Error('No audio returned from Gemini TTS');
+            const rateMatch = mimeType.match(/rate=(\d+)/);
+            const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
+            const wavUrl = pcm16Base64ToWavUrl(audioData, sampleRate);
+
+            state.neuralAudioCache[cacheKey] = wavUrl;
+            updateNeuralCacheBadge();
+            return wavUrl;
+        }
+
+        function updateNeuralCacheBadge() {
+            const cachedCount = state.segments.filter(s => {
+                const txt = (s.translated || s.original || '').trim();
+                return Boolean(state.neuralAudioCache[`${s.id}_${txt}_${state.geminiVoice}`]);
+            }).length;
+            document.getElementById('neuralCacheBadge').textContent = `${cachedCount} / ${state.segments.length} Cached`;
+        }
+
+        // Speak a segment (used by both real-time video sync and row preview button)
+        async function speakSegment(segment, isPreview = false) {
+            const text = (segment.translated || segment.original || '').trim();
+            if (!text) return;
+
+            stopAllActiveSpeech();
+
+            // Calculate dynamic speech rate if Auto-Fit Duration is enabled
+            const segDuration = Math.max(1.2, segment.end - segment.start);
+            let effectiveRate = state.voiceRate;
+
+            if (state.autoFitDuration) {
+                // Estimate natural duration (~13 chars/sec for Latin or ~9 chars/sec for Asian/Khmer scripts)
+                const estimatedSec = Math.max(1.0, text.length / 11.5);
+                if (estimatedSec > segDuration * 0.92) {
+                    const neededRate = estimatedSec / (segDuration * 0.9);
+                    effectiveRate = Math.min(1.85, Math.max(state.voiceRate, Number(neededRate.toFixed(2))));
+                }
+            }
+
+            // Show HUD speaking badge & duck background video volume
+            ttsSpeakingBadge.classList.remove('hidden');
+            ttsSpeakingBadge.classList.add('flex');
+            updateOriginalMediaVolume(true);
+
+            if (state.ttsEngine === 'gemini') {
+                ttsSpeakingModeText.textContent = `NEURAL (${state.geminiVoice})`;
+                try {
+                    const wavUrl = await synthesizeGeminiNeuralSegment(segment);
+                    if (!wavUrl) return;
+                    const audio = new Audio(wavUrl);
+                    audio.volume = state.dubVolume;
+                    audio.playbackRate = effectiveRate;
+                    activeNeuralAudio = audio;
+                    audio.onended = () => {
+                        ttsSpeakingBadge.classList.add('hidden');
+                        ttsSpeakingBadge.classList.remove('flex');
+                        updateOriginalMediaVolume(false);
+                    };
+                    await audio.play();
+                } catch (err) {
+                    showToast('Neural TTS failed, falling back to Browser Web Speech.', 'warn');
+                    speakWithBrowserTTS(text, effectiveRate);
+                }
+            } else {
+                ttsSpeakingModeText.textContent = `DUB (${effectiveRate.toFixed(2)}x)`;
+                speakWithBrowserTTS(text, effectiveRate);
+            }
+        }
+
+        function speakWithBrowserTTS(text, rate) {
+            if (!('speechSynthesis' in window)) {
+                showToast('Web Speech API is not supported in this browser.', 'error');
+                return;
+            }
+            const utter = new SpeechSynthesisUtterance(text);
+            const targetLang = document.getElementById('targetLangSelect').value;
+            utter.lang = LANGUAGE_BCP_MAP[targetLang] || 'en-US';
+
+            const chosenVoice = state.availableVoices.find(v => v.voiceURI === state.selectedVoiceURI);
+            if (chosenVoice) {
+                utter.voice = chosenVoice;
+                utter.lang = chosenVoice.lang;
+            }
+
+            utter.rate = Math.max(0.5, Math.min(2.0, rate));
+            utter.pitch = state.voicePitch;
+            utter.volume = state.dubVolume;
+
+            utter.onend = () => {
+                ttsSpeakingBadge.classList.add('hidden');
+                ttsSpeakingBadge.classList.remove('flex');
+                updateOriginalMediaVolume(false);
+            };
+            utter.onerror = () => {
+                ttsSpeakingBadge.classList.add('hidden');
+                ttsSpeakingBadge.classList.remove('flex');
+                updateOriginalMediaVolume(false);
+            };
+
+            window.speechSynthesis.speak(utter);
+        }
+
+        /********************************************************************
+         * 6. MASTER PLAYBACK LOOP & REAL-TIME SUBTITLE/DUBBING SYNC
+         ********************************************************************/
+        let lastFrameTimestamp = performance.now();
+
+        function masterAnimationLoop(now) {
+            const dt = (now - lastFrameTimestamp) / 1000;
+            lastFrameTimestamp = now;
+
+            if (state.isPlaying) {
+                if (state.isDemoMode) {
+                    state.currentTime += dt;
+                    if (state.currentTime >= state.duration) {
+                        state.currentTime = 0;
+                        pausePlayback();
+                    }
+                } else {
+                    state.currentTime = mainVideo.currentTime;
+                    if (mainVideo.ended) {
+                        pausePlayback();
+                    }
+                }
+                syncTimecodeAndDubbing(state.currentTime);
+            }
+
+            if (state.isDemoMode) {
+                renderDemoStageFrame();
+            }
+
+            requestAnimationFrame(masterAnimationLoop);
+        }
+
+        function syncTimecodeAndDubbing(currentTime) {
+            // Update Playhead & Time Readout
+            const pct = state.duration > 0 ? Math.min(100, (currentTime / state.duration) * 100) : 0;
+            timelinePlayhead.style.left = `${pct}%`;
+            playerTimeReadout.textContent = `${formatTime(currentTime)} / ${formatTime(state.duration)}`;
+
+            // Find segment covering currentTime
+            const activeSeg = state.segments.find(s => currentTime >= s.start && currentTime <= s.end);
+
+            if (activeSeg) {
+                // Update Caption Overlay
+                captionBox.classList.remove('opacity-0');
+                captionOriginalText.textContent = state.dualSubtitles ? activeSeg.original : '';
+                captionOriginalText.classList.toggle('hidden', !state.dualSubtitles);
+                captionTranslatedText.textContent = activeSeg.translated || activeSeg.original;
+
+                // Did we just enter a new segment?
+                if (state.activeSegmentId !== activeSeg.id) {
+                    state.activeSegmentId = activeSeg.id;
+                    highlightActiveSegmentRow(activeSeg.id);
+
+                    // Trigger AI Dubbing if enabled and we haven't spoken this segment in this pass
+                    if (state.isPlaying && state.enableDubbing && state.lastSpokenSegmentId !== activeSeg.id) {
+                        state.lastSpokenSegmentId = activeSeg.id;
+                        speakSegment(activeSeg, false);
+                    }
+                }
+            } else {
+                state.activeSegmentId = null;
+                captionBox.classList.add('opacity-0');
+                highlightActiveSegmentRow(null);
+            }
+        }
+
+        function startPlayback() {
+            state.isPlaying = true;
+            state.lastSpokenSegmentId = null; // allow immediate trigger if starting inside a segment
+            document.getElementById('playPauseIcon').className = 'fa-solid fa-pause text-sm';
+            document.getElementById('centerPlayIcon').className = 'fa-solid fa-pause text-xl';
+
+            if (state.isDemoMode) {
+                startDemoAmbientAudio();
+            } else {
+                mainVideo.play().catch(() => {});
+            }
+            syncTimecodeAndDubbing(state.currentTime);
+        }
+
+        function pausePlayback() {
+            state.isPlaying = false;
+            document.getElementById('playPauseIcon').className = 'fa-solid fa-play text-sm';
+            document.getElementById('centerPlayIcon').className = 'fa-solid fa-play text-xl ml-0.5';
+
+            if (state.isDemoMode) {
+                stopDemoAmbientAudio();
+            } else {
+                mainVideo.pause();
+            }
+            stopAllActiveSpeech();
+        }
+
+        function seekToTime(seconds) {
+            const clamped = Math.max(0, Math.min(state.duration, seconds));
+            state.currentTime = clamped;
+            state.lastSpokenSegmentId = null;
+            stopAllActiveSpeech();
+
+            if (!state.isDemoMode) {
+                mainVideo.currentTime = clamped;
+            }
+            syncTimecodeAndDubbing(clamped);
+        }
+
+        /********************************************************************
+         * 7. TIMELINE & SEGMENT EDITOR RENDERING
+         ********************************************************************/
+        function renderTimelineBlocks() {
+            timelineSegmentsLayer.innerHTML = '';
+            const maxEnd = state.segments.reduce((acc, s) => Math.max(acc, s.end), 30);
+            if (state.isDemoMode) {
+                state.duration = Math.max(32, Math.ceil(maxEnd + 1));
+            }
+
+            state.segments.forEach((seg, idx) => {
+                const leftPct = Math.max(0, (seg.start / state.duration) * 100);
+                const widthPct = Math.max(0.8, ((seg.end - seg.start) / state.duration) * 100);
+                const block = document.createElement('div');
+                block.className = 'absolute top-1 bottom-1 rounded bg-indigo-500/35 border border-indigo-400/50 hover:bg-indigo-500/60 transition pointer-events-none flex items-center px-1 overflow-hidden';
+                block.style.left = `${leftPct}%`;
+                block.style.width = `${widthPct}%`;
+                block.innerHTML = `<span class="text-[9px] font-mono text-indigo-200 truncate">#${idx + 1}</span>`;
+                timelineSegmentsLayer.appendChild(block);
+            });
+        }
+
+        function getPacingBadge(seg) {
+            const dur = Math.max(0.5, seg.end - seg.start);
+            const textLen = (seg.translated || seg.original || '').length;
+            const charsPerSec = textLen / dur;
+            if (charsPerSec > 18) {
+                return `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono" title="Fast speech pacing (${charsPerSec.toFixed(1)} chars/s)">Tight (${dur.toFixed(1)}s)</span>`;
+            }
+            return `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono">${dur.toFixed(1)}s</span>`;
+        }
+
+        function renderSegmentsEditor() {
+            segmentsListContainer.innerHTML = '';
+            const q = state.searchQuery.toLowerCase().trim();
+
+            const filtered = state.segments.filter(s =>
+                !q ||
+                s.original.toLowerCase().includes(q) ||
+                s.translated.toLowerCase().includes(q)
+            );
+
+            document.getElementById('segmentCountBadge').textContent = `${filtered.length} segment${filtered.length === 1 ? '' : 's'}`;
+            updateNeuralCacheBadge();
+
+            filtered.forEach((seg, index) => {
+                const card = document.createElement('div');
+                card.id = `row-${seg.id}`;
+                const isActive = state.activeSegmentId === seg.id;
+                card.className = `rounded-xl p-3 bg-studio-900/90 border border-slate-800/90 transition-all flex flex-col gap-2.5 ${isActive ? 'segment-active' : 'hover:border-slate-700'}`;
+
+                card.innerHTML = `
+                    <!-- Row Top Bar: Index, Editable Timecodes, Pacing Badge & Action Buttons -->
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 sm:gap-2">
+                            <span class="px-2 py-0.5 rounded-md bg-studio-800 text-indigo-400 font-mono text-xs font-bold">#${index + 1}</span>
+                            <div class="flex items-center gap-1 bg-studio-950 px-2 py-1 rounded-lg border border-slate-800 text-xs font-mono">
+                                <input type="number" step="0.1" min="0" value="${seg.start}" data-id="${seg.id}" data-field="start" class="seg-time-input w-14 bg-transparent text-slate-200 focus:outline-none focus:text-indigo-400 text-center" title="Start Time (seconds)">
+                                <span class="text-slate-600">→</span>
+                                <input type="number" step="0.1" min="0" value="${seg.end}" data-id="${seg.id}" data-field="end" class="seg-time-input w-14 bg-transparent text-slate-200 focus:outline-none focus:text-indigo-400 text-center" title="End Time (seconds)">
+                                <span class="text-[10px] text-slate-500">s</span>
+                            </div>
+                            ${getPacingBadge(seg)}
+                        </div>
+
+                        <!-- Segment Row Action Buttons -->
+                        <div class="flex items-center gap-1.5">
+                            <button data-action="seek" data-id="${seg.id}" class="px-2.5 py-1 rounded-lg bg-studio-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1 transition" title="Seek Video to Timestamp">
+                                <i class="fa-solid fa-crosshairs text-sky-400"></i>
+                                <span class="hidden sm:inline">Seek</span>
+                            </button>
+                            <button data-action="speak" data-id="${seg.id}" class="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs flex items-center gap-1 transition" title="Preview AI Dubbing for this Line">
+                                <i class="fa-solid fa-volume-high"></i>
+                                <span>Speak</span>
+                            </button>
+                            <button data-action="insert" data-id="${seg.id}" class="p-1.5 rounded-lg bg-studio-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs transition" title="Insert New Segment Below">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                            <button data-action="delete" data-id="${seg.id}" class="p-1.5 rounded-lg bg-studio-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 text-xs transition" title="Delete Segment">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Two-Column Editable Text Inputs (Original & Translated Dubbing) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-mono uppercase text-slate-500 mb-1">Original Source Line</label>
+                            <textarea rows="2" data-id="${seg.id}" data-field="original" class="seg-text-input w-full rounded-lg bg-studio-950/90 border border-slate-800 focus:border-slate-600 p-2 text-xs text-slate-300 focus:outline-none resize-none leading-relaxed">${seg.original}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-mono uppercase text-indigo-400/90 mb-1">Translated Dubbing Script</label>
+                            <textarea rows="2" data-id="${seg.id}" data-field="translated" class="seg-text-input w-full rounded-lg bg-studio-950 border border-indigo-500/30 focus:border-indigo-400 p-2 text-xs sm:text-sm font-medium text-amber-200 focus:outline-none resize-none leading-relaxed">${seg.translated}</textarea>
+                        </div>
+                    </div>
+                `;
+                segmentsListContainer.appendChild(card);
+            });
+
+            renderTimelineBlocks();
+        }
+
+        function highlightActiveSegmentRow(segId) {
+            const rows = segmentsListContainer.querySelectorAll('[id^="row-"]');
+            rows.forEach(r => r.classList.remove('segment-active'));
+            if (!segId) return;
+
+            const targetRow = document.getElementById(`row-${segId}`);
+            if (targetRow) {
+                targetRow.classList.add('segment-active');
+                if (state.autoScroll && state.isPlaying) {
+                    targetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        }
+
+        /********************************************************************
+         * 8. GEMINI API: AI TRANSLATION & DUBBING SCRIPT OPTIMIZER
+         ********************************************************************/
+        async function translateAndOptimizeScript() {
+            if (state.segments.length === 0) {
+                showToast('No script segments to translate.', 'warn');
+                return;
+            }
+
+            const btn = document.getElementById('btnAiTranslateAll');
+            const icon = document.getElementById('translateSpinnerIcon');
+            const label = document.getElementById('translateBtnLabel');
+            const sourceLang = document.getElementById('sourceLangSelect').value;
+            const targetLang = document.getElementById('targetLangSelect').value;
+            const dubStyle = document.getElementById('dubStyleSelect').value;
+
+            btn.disabled = true;
+            icon.className = 'fa-solid fa-circle-notch fa-spin text-base';
+            label.textContent = `Translating to ${targetLang}...`;
+
+            try {
+                const inputPayload = state.segments.map(s => ({
+                    id: s.id,
+                    durationSec: Number((s.end - s.start).toFixed(1)),
+                    originalText: s.original
+                }));
+
+                const systemPrompt = `You are an expert AI Video Dubbing Translator and Lip-Sync Script Adapter.
+Translate each subtitle segment from ${sourceLang} into ${targetLang}.
+CRITICAL DUBBING RULES:
+1. Adaptation Style: ${dubStyle}.
+2. Match the natural spoken duration ("durationSec") of each segment so a voice actor or TTS engine can speak the translated line comfortably within that exact time window without rushing.
+3. Return ONLY a valid JSON array matching the requested schema, preserving the exact "id" for each segment.`;
+
+                const userQuery = `Translate and optimize these ${inputPayload.length} video dubbing segments into ${targetLang}:\n${JSON.stringify(inputPayload)}`;
+
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    id: { type: "STRING" },
+                                    translatedText: { type: "STRING" }
+                                },
+                                propertyOrdering: ["id", "translatedText"]
+                            }
+                        }
+                    }
+                };
+
+                const result = await fetchWithBackoff(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const rawJson = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!rawJson) throw new Error('Empty response from Gemini API');
+
+                const translatedArray = JSON.parse(rawJson);
+                const mapById = {};
+                translatedArray.forEach(item => {
+                    if (item && item.id) mapById[item.id] = item.translatedText;
+                });
+
+                state.segments.forEach(seg => {
+                    if (mapById[seg.id]) {
+                        seg.translated = mapById[seg.id];
+                    }
+                });
+
+                renderSegmentsEditor();
+                syncTimecodeAndDubbing(state.currentTime);
+                populateVoiceDropdown();
+                showToast(`Successfully translated & duration-optimized ${state.segments.length} segments into ${targetLang}!`, 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('AI Translation encountered an error. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                icon.className = 'fa-solid fa-language text-base';
+                label.textContent = 'AI Translate & Optimize for Dubbing';
+            }
+        }
+
+        // Generate complete timed script from a user topic via Gemini API
+        async function generateScriptFromTopic() {
+            const topicInput = document.getElementById('aiTopicInput');
+            const topic = topicInput.value.trim();
+            if (!topic) {
+                showToast('Please enter a topic or description first.', 'warn');
+                return;
+            }
+
+            const btn = document.getElementById('btnRunAiTopicScript');
+            const targetLang = document.getElementById('targetLangSelect').value;
+            const totalDur = parseFloat(document.getElementById('splitTotalDurationInput').value) || 32;
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Generating...</span>`;
+
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const prompt = `Create a 5 to 7 segment timed video narration script about: "${topic}".
+Total video duration is ${totalDur} seconds.
+Provide each segment with sequential non-overlapping "start" and "end" timestamps (in seconds), "original" (in English), and "translated" (natural dubbing translation in ${targetLang}).`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    start: { type: "NUMBER" },
+                                    end: { type: "NUMBER" },
+                                    original: { type: "STRING" },
+                                    translated: { type: "STRING" }
+                                },
+                                propertyOrdering: ["start", "end", "original", "translated"]
+                            }
+                        }
+                    }
+                };
+
+                const result = await fetchWithBackoff(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const rawJson = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                const generated = JSON.parse(rawJson);
+
+                if (Array.isArray(generated) && generated.length > 0) {
+                    state.segments = generated.map((item, idx) => ({
+                        id: `seg-${Date.now()}-${idx}`,
+                        start: Number(Number(item.start).toFixed(1)),
+                        end: Number(Number(item.end).toFixed(1)),
+                        original: item.original || '',
+                        translated: item.translated || item.original || ''
+                    }));
+                    renderSegmentsEditor();
+                    seekToTime(0);
+                    document.getElementById('transcriptModal').classList.add('hidden');
+                    document.getElementById('transcriptModal').classList.remove('flex');
+                    showToast(`Generated ${state.segments.length} timed dubbing segments!`, 'success');
+                }
+            } catch (e) {
+                showToast('Could not generate script from topic. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-sparkles"></i> <span>Generate with Gemini</span>`;
+            }
+        }
+
+        /********************************************************************
+         * 9. EVENT LISTENERS & UI WIRING
+         ********************************************************************/
+        // Delegate edits & button clicks inside the Segment Editor
+        segmentsListContainer.addEventListener('input', (e) => {
+            const target = e.target;
+            const segId = target.getAttribute('data-id');
+            const field = target.getAttribute('data-field');
+            if (!segId || !field) return;
+
+            const seg = state.segments.find(s => s.id === segId);
+            if (!seg) return;
+
+            if (field === 'start' || field === 'end') {
+                seg[field] = Math.max(0, parseFloat(target.value) || 0);
+                renderTimelineBlocks();
+            } else {
+                seg[field] = target.value;
+                if (state.activeSegmentId === seg.id) {
+                    captionOriginalText.textContent = state.dualSubtitles ? seg.original : '';
+                    captionTranslatedText.textContent = seg.translated || seg.original;
+                }
+            }
+        });
+
+        segmentsListContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-action');
+            const segId = btn.getAttribute('data-id');
+            const idx = state.segments.findIndex(s => s.id === segId);
+            if (idx === -1) return;
+            const seg = state.segments[idx];
+
+            if (action === 'seek') {
+                seekToTime(seg.start + 0.05);
+            } else if (action === 'speak') {
+                speakSegment(seg, true);
+            } else if (action === 'insert') {
+                const newStart = Number(seg.end.toFixed(1));
+                const newEnd = Number((newStart + 4.0).toFixed(1));
+                state.segments.splice(idx + 1, 0, {
+                    id: `seg-${Date.now()}`,
+                    start: newStart,
+                    end: newEnd,
+                    original: "New subtitle segment text.",
+                    translated: "អត្ថបទបញ្ចូលសំឡេងថ្មី។"
+                });
+                renderSegmentsEditor();
+                showToast('Inserted new segment below.', 'info');
+            } else if (action === 'delete') {
+                if (state.segments.length <= 1) {
+                    showToast('At least one segment is required.', 'warn');
+                    return;
+                }
+                state.segments.splice(idx, 1);
+                renderSegmentsEditor();
+            }
+        });
+
+        // Timeline Scrubbing (Click & Drag)
+        let isScrubbingTimeline = false;
+        function scrubFromEvent(e) {
+            const rect = timelineTrack.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+            seekToTime(ratio * state.duration);
+        }
+
+        timelineTrack.addEventListener('mousedown', (e) => {
+            isScrubbingTimeline = true;
+            scrubFromEvent(e);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (isScrubbingTimeline) scrubFromEvent(e);
+        });
+        window.addEventListener('mouseup', () => {
+            isScrubbingTimeline = false;
+        });
+        timelineTrack.addEventListener('touchstart', (e) => {
+            isScrubbingTimeline = true;
+            scrubFromEvent(e);
+        }, { passive: true });
+        window.addEventListener('touchmove', (e) => {
+            if (isScrubbingTimeline) scrubFromEvent(e);
+        }, { passive: true });
+        window.addEventListener('touchend', () => {
+            isScrubbingTimeline = false;
+        });
+
+        // Play / Pause / Stop Controls
+        document.getElementById('btnPlayPause').addEventListener('click', () => {
+            state.isPlaying ? pausePlayback() : startPlayback();
+        });
+        document.getElementById('btnCenterPlay').addEventListener('click', () => {
+            state.isPlaying ? pausePlayback() : startPlayback();
+        });
+        document.getElementById('btnStopReset').addEventListener('click', () => {
+            pausePlayback();
+            seekToTime(0);
+        });
+        document.getElementById('btnToggleDualSubs').addEventListener('click', () => {
+            state.dualSubtitles = !state.dualSubtitles;
+            document.getElementById('subModeLabel').textContent = state.dualSubtitles ? 'Dual Subs' : 'Target Only';
+            syncTimecodeAndDubbing(state.currentTime);
+        });
+        document.getElementById('chkEnableDubbing').addEventListener('change', (e) => {
+            state.enableDubbing = e.target.checked;
+            if (!state.enableDubbing) {
+                stopAllActiveSpeech();
+            }
+        });
+
+        // Load Demo Video & Sample Script
+        document.getElementById('btnLoadDemo').addEventListener('click', () => {
+            pausePlayback();
+            state.isDemoMode = true;
+            mainVideo.classList.add('hidden');
+            demoCanvas.classList.remove('hidden');
+            document.getElementById('mediaFileName').textContent = 'AI Documentary Demo (Built-in HD Canvas Stream)';
+            state.segments = JSON.parse(JSON.stringify(DEFAULT_DEMO_SEGMENTS));
+            state.duration = 32.0;
+            renderSegmentsEditor();
+            seekToTime(0);
+            showToast('Loaded Demo Video & synchronized Khmer/English sample script! Press Play to test.', 'success');
+        });
+
+        // Upload Custom Video / Audio File
+        function handleMediaFileUpload(file) {
+            if (!file) return;
+            pausePlayback();
+            const url = URL.createObjectURL(file);
+            state.isDemoMode = false;
+            demoCanvas.classList.add('hidden');
+            mainVideo.classList.remove('hidden');
+            mainVideo.src = url;
+            mainVideo.load();
+            document.getElementById('mediaFileName').textContent = file.name;
+
+            mainVideo.onloadedmetadata = () => {
+                state.duration = mainVideo.duration || 60;
+                renderTimelineBlocks();
+                seekToTime(0);
+                showToast(`Loaded media "${file.name}" (${formatTime(state.duration)})`, 'success');
+            };
+        }
+
+        document.getElementById('mediaFileInput').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleMediaFileUpload(e.target.files[0]);
+            }
+        });
+
+        // Upload .SRT / .VTT / .JSON Subtitle File
+        function handleSubtitleFileUpload(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const content = ev.target.result;
+                if (file.name.toLowerCase().endsWith('.json')) {
+                    try {
+                        const data = JSON.parse(content);
+                        if (Array.isArray(data.segments || data)) {
+                            state.segments = data.segments || data;
+                            renderSegmentsEditor();
+                            seekToTime(0);
+                            showToast(`Imported ${state.segments.length} segments from JSON project!`, 'success');
+                        }
+                    } catch (err) {
+                        showToast('Invalid JSON project file.', 'error');
+                    }
+                } else {
+                    const parsed = parseSrtOrVtt(content);
+                    if (parsed.length > 0) {
+                        state.segments = parsed;
+                        renderSegmentsEditor();
+                        seekToTime(0);
+                        showToast(`Imported ${parsed.length} subtitle segments from "${file.name}"!`, 'success');
+                    } else {
+                        showToast('Could not parse timestamps from subtitle file.', 'warn');
+                    }
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        document.getElementById('srtFileInput').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleSubtitleFileUpload(e.target.files[0]);
+            }
+        });
+
+        // Drag and Drop support on Player Card
+        const dropZone = document.getElementById('dropZoneContainer');
+        const dragOverlay = document.getElementById('dragOverlay');
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dragOverlay.classList.remove('hidden');
+        });
+        dropZone.addEventListener('dragleave', (e) => {
+            if (!dropZone.contains(e.relatedTarget)) {
+                dragOverlay.classList.add('hidden');
+            }
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragOverlay.classList.add('hidden');
+            const files = Array.from(e.dataTransfer.files || []);
+            files.forEach(file => {
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (['srt', 'vtt', 'json'].includes(ext)) {
+                    handleSubtitleFileUpload(file);
+                } else if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
+                    handleMediaFileUpload(file);
+                }
+            });
+        });
+
+        // Voice & Mixer Controls
+        document.getElementById('tabEngineBrowser').addEventListener('click', () => {
+            state.ttsEngine = 'browser';
+            document.getElementById('tabEngineBrowser').className = 'py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-indigo-600 text-white shadow transition';
+            document.getElementById('tabEngineGemini').className = 'py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 text-slate-400 hover:text-white transition';
+            document.getElementById('browserVoicePanel').classList.remove('hidden');
+            document.getElementById('geminiVoicePanel').classList.add('hidden');
+            document.getElementById('geminiVoicePanel').classList.remove('flex');
+        });
+
+        document.getElementById('tabEngineGemini').addEventListener('click', () => {
+            state.ttsEngine = 'gemini';
+            document.getElementById('tabEngineGemini').className = 'py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow transition';
+            document.getElementById('tabEngineBrowser').className = 'py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 text-slate-400 hover:text-white transition';
+            document.getElementById('browserVoicePanel').classList.add('hidden');
+            document.getElementById('geminiVoicePanel').classList.remove('hidden');
+            document.getElementById('geminiVoicePanel').classList.add('flex');
+            updateNeuralCacheBadge();
+        });
+
+        document.getElementById('voiceSelect').addEventListener('change', (e) => {
+            state.selectedVoiceURI = e.target.value;
+        });
+        document.getElementById('btnRefreshVoices').addEventListener('click', () => {
+            loadBrowserVoices();
+            showToast('Refreshed browser/system TTS voices.', 'info');
+        });
+        document.getElementById('geminiVoiceSelect').addEventListener('change', (e) => {
+            state.geminiVoice = e.target.value;
+            updateNeuralCacheBadge();
+        });
+
+        // Pre-render all segments with Gemini Neural TTS
+        document.getElementById('btnSynthesizeAllNeural').addEventListener('click', async () => {
+            const btn = document.getElementById('btnSynthesizeAllNeural');
+            btn.disabled = true;
+            for (let i = 0; i < state.segments.length; i++) {
+                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Rendering ${i + 1}/${state.segments.length}...</span>`;
+                try {
+                    await synthesizeGeminiNeuralSegment(state.segments[i]);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-cloud-bolt"></i> <span>Pre-Render All Segments</span>`;
+            showToast('All segments pre-rendered with Gemini Neural TTS for instant synced playback!', 'success');
+        });
+
+        document.getElementById('btnTestVoice').addEventListener('click', () => {
+            const sampleSeg = state.segments[0] || {
+                id: 'test',
+                start: 0,
+                end: 4,
+                original: 'Testing AI dubbing studio voice output.',
+                translated: 'ការសាកល្បងសំឡេងបញ្ចូលក្នុងវីដេអូ។'
+            };
+            speakSegment(sampleSeg, true);
+        });
+
+        // Mixer Sliders
+        document.getElementById('sliderRate').addEventListener('input', (e) => {
+            state.voiceRate = parseFloat(e.target.value);
+            document.getElementById('valRate').textContent = `${state.voiceRate.toFixed(2)}x`;
+        });
+        document.getElementById('sliderPitch').addEventListener('input', (e) => {
+            state.voicePitch = parseFloat(e.target.value);
+            document.getElementById('valPitch').textContent = state.voicePitch.toFixed(2);
+        });
+        document.getElementById('sliderDubVol').addEventListener('input', (e) => {
+            state.dubVolume = parseInt(e.target.value, 10) / 100;
+            document.getElementById('valDubVol').textContent = `${e.target.value}%`;
+        });
+        document.getElementById('sliderDuckVol').addEventListener('input', (e) => {
+            state.duckVolume = parseInt(e.target.value, 10) / 100;
+            document.getElementById('valDuckVol').textContent = `${e.target.value}%`;
+        });
+        document.getElementById('chkAutoFitDuration').addEventListener('change', (e) => {
+            state.autoFitDuration = e.target.checked;
+        });
+        document.getElementById('chkAutoScroll').addEventListener('change', (e) => {
+            state.autoScroll = e.target.checked;
+        });
+
+        // Language & Translation Controls
+        document.getElementById('targetLangSelect').addEventListener('change', () => {
+            populateVoiceDropdown();
+        });
+        document.getElementById('btnSwapLangs').addEventListener('click', () => {
+            const src = document.getElementById('sourceLangSelect');
+            const tgt = document.getElementById('targetLangSelect');
+            const temp = src.value;
+            if (temp !== 'Auto-Detect') {
+                src.value = tgt.value.startsWith('Chinese') ? 'Chinese' : tgt.value;
+                tgt.value = temp === 'Chinese' ? 'Chinese (Simplified)' : temp;
+                // Also swap segment text columns
+                state.segments.forEach(s => {
+                    const t = s.original;
+                    s.original = s.translated;
+                    s.translated = t;
+                });
+                renderSegmentsEditor();
+                populateVoiceDropdown();
+                showToast('Swapped source & target languages and script columns.', 'info');
+            }
+        });
+
+        document.getElementById('btnAiTranslateAll').addEventListener('click', translateAndOptimizeScript);
+
+        // Shift timestamps & Add Segment
+        function shiftAllTimestamps(deltaSec) {
+            state.segments.forEach(s => {
+                s.start = Number(Math.max(0, s.start + deltaSec).toFixed(2));
+                s.end = Number(Math.max(s.start + 0.5, s.end + deltaSec).toFixed(2));
+            });
+            renderSegmentsEditor();
+            showToast(`Shifted all timestamps by ${deltaSec > 0 ? '+' : ''}${deltaSec}s`, 'info');
+        }
+        document.getElementById('btnShiftMinus').addEventListener('click', () => shiftAllTimestamps(-0.5));
+        document.getElementById('btnShiftPlus').addEventListener('click', () => shiftAllTimestamps(0.5));
+
+        document.getElementById('btnAddSegmentTop').addEventListener('click', () => {
+            const lastSeg = state.segments[state.segments.length - 1];
+            const start = lastSeg ? Number((lastSeg.end + 0.5).toFixed(1)) : 0;
+            const end = Number((start + 4.5).toFixed(1));
+            state.segments.push({
+                id: `seg-${Date.now()}`,
+                start,
+                end,
+                original: "Enter original speech here...",
+                translated: "បញ្ចូលអត្ថបទបកប្រែនៅទីនេះ..."
+            });
+            renderSegmentsEditor();
+            segmentsListContainer.scrollTop = segmentsListContainer.scrollHeight;
+        });
+
+        document.getElementById('searchSegmentsInput').addEventListener('input', (e) => {
+            state.searchQuery = e.target.value;
+            renderSegmentsEditor();
+        });
+
+        // Copy Translated Script to Clipboard
+        document.getElementById('btnCopyTranslatedScript').addEventListener('click', () => {
+            const fullText = state.segments.map(s => `[${formatTime(s.start)}] ${s.translated}`).join('\n');
+            const tempArea = document.createElement('textarea');
+            tempArea.value = fullText;
+            document.body.appendChild(tempArea);
+            tempArea.select();
+            document.execCommand('copy');
+            tempArea.remove();
+            showToast('Copied full timed translated script to clipboard!', 'success');
+        });
+
+        // Transcript Generator & Splitter Modal
+        const transcriptModal = document.getElementById('transcriptModal');
+        document.getElementById('btnOpenTranscriptModal').addEventListener('click', () => {
+            document.getElementById('splitTotalDurationInput').value = Math.round(state.duration || 32);
+            transcriptModal.classList.remove('hidden');
+            transcriptModal.classList.add('flex');
+        });
+        document.getElementById('btnCloseTranscriptModal').addEventListener('click', () => {
+            transcriptModal.classList.add('hidden');
+            transcriptModal.classList.remove('flex');
+        });
+        document.getElementById('btnRunAiTopicScript').addEventListener('click', generateScriptFromTopic);
+
+        document.getElementById('btnSplitRawTranscript').addEventListener('click', () => {
+            const raw = document.getElementById('rawTranscriptTextarea').value.trim();
+            if (!raw) {
+                showToast('Please paste a transcript or paragraph first.', 'warn');
+                return;
+            }
+            const totalDuration = Math.max(5, parseFloat(document.getElementById('splitTotalDurationInput').value) || 32);
+            // Split by sentence punctuation or newlines
+            const sentences = raw
+                .split(/(?<=[.!?។៕\n])\s+/)
+                .map(s => s.trim())
+                .filter(Boolean);
+
+            if (sentences.length === 0) return;
+
+            const totalChars = sentences.reduce((sum, s) => sum + s.length, 0) || 1;
+            let cursor = 0.2;
+
+            state.segments = sentences.map((line, i) => {
+                const weight = line.length / totalChars;
+                const segDur = Math.max(2.0, weight * (totalDuration - 0.5));
+                const start = Number(cursor.toFixed(1));
+                const end = Number((cursor + segDur - 0.2).toFixed(1));
+                cursor += segDur;
+                return {
+                    id: `seg-${Date.now()}-${i}`,
+                    start,
+                    end,
+                    original: line,
+                    translated: line
+                };
+            });
+
+            renderSegmentsEditor();
+            seekToTime(0);
+            transcriptModal.classList.add('hidden');
+            transcriptModal.classList.remove('flex');
+            showToast(`Split raw text into ${state.segments.length} timed segments! Click "AI Translate" to dub.`, 'success');
+        });
+
+        /********************************************************************
+         * 10. ONE-CLICK EXPORT (.SRT, Bilingual .SRT, .VTT, .JSON)
+         ********************************************************************/
+        function downloadFile(filename, content, mime = 'text/plain;charset=utf-8') {
+            const blob = new Blob([content], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        document.getElementById('btnExportSRT').addEventListener('click', () => {
+            const srt = state.segments.map((s, i) =>
+                `${i + 1}\n${formatSrtTimestamp(s.start)} --> ${formatSrtTimestamp(s.end)}\n${s.translated || s.original}`
+            ).join('\n\n');
+            downloadFile('metadub_translated.srt', srt);
+            showToast('Downloaded Translated .SRT subtitle file!', 'success');
+        });
+
+        document.getElementById('btnExportDualSRT').addEventListener('click', () => {
+            const srt = state.segments.map((s, i) =>
+                `${i + 1}\n${formatSrtTimestamp(s.start)} --> ${formatSrtTimestamp(s.end)}\n${s.original}\n${s.translated}`
+            ).join('\n\n');
+            downloadFile('metadub_bilingual.srt', srt);
+            showToast('Downloaded Bilingual .SRT subtitle file!', 'success');
+        });
+
+        document.getElementById('btnExportVTT').addEventListener('click', () => {
+            const body = state.segments.map((s, i) =>
+                `${i + 1}\n${formatVttTimestamp(s.start)} --> ${formatVttTimestamp(s.end)}\n${s.translated || s.original}`
+            ).join('\n\n');
+            downloadFile('metadub_translated.vtt', `WEBVTT\n\n${body}`);
+            showToast('Downloaded WebVTT (.vtt) subtitle file!', 'success');
+        });
+
+        document.getElementById('btnExportJSON').addEventListener('click', () => {
+            const project = {
+                app: "MetaDub AI Studio",
+                exportedAt: new Date().toISOString(),
+                sourceLanguage: document.getElementById('sourceLangSelect').value,
+                targetLanguage: document.getElementById('targetLangSelect').value,
+                segments: state.segments
+            };
+            downloadFile('metadub_project.json', JSON.stringify(project, null, 2), 'application/json');
+            showToast('Saved complete project as .JSON!', 'success');
+        });
+
+        /********************************************************************
+         * 11. INITIALIZATION ON WINDOW LOAD
+         ********************************************************************/
+        window.addEventListener('resize', resizeDemoCanvas);
+
+        window.onload = function () {
+            resizeDemoCanvas();
+            loadBrowserVoices();
+            renderSegmentsEditor();
+            syncTimecodeAndDubbing(0);
+            requestAnimationFrame(masterAnimationLoop);
+        };
+    </script>
+</body>
+</html>
